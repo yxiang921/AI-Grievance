@@ -18,15 +18,15 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, token=HUG
 
 class_mapping = {
     0: "Academic grievance",
-    2: "Behaviour grievance",
-    1: "Facility grievance",
+    1: "Behaviour grievance",
+    2: "Facility grievance",
     3: "Finance grievance",
     4: "Other"
 }
 
-def predict_complaint(text):
+def categorize_grievance(grievance_text):
     inputs = tokenizer.encode_plus(
-        text,
+        grievance_text,
         add_special_tokens=True,
         max_length=128,
         padding='max_length',
@@ -45,24 +45,23 @@ def predict_complaint(text):
         probs = torch.nn.functional.softmax(logits, dim=1)
 
     predicted_class = torch.argmax(logits, dim=1).item()
-    predicted_label = class_mapping.get(predicted_class, "Unknown")
+    predicted_label = class_mapping.get(predicted_class, "Unknown Category")
     return predicted_label, probs.tolist(), predicted_class
 
 @app.route('/categorize', methods=['POST'])
-def predict():
+def categorize():
     data = request.json
-    if 'complaint' not in data:
+    if 'grievance' not in data:
         return jsonify({'error': 'No complaint text provided'}), 400
     
-    complaint_text = data['complaint']
-    predicted_label, probabilities, predicted_class = predict_complaint(complaint_text)
+    grievance_text = data['grievance']
+    predicted_label, probabilities, predicted_class = categorize_grievance(grievance_text)
     
     return jsonify({
-        'complaint': complaint_text,
+        'grievance': grievance_text,
         'predicted_label': predicted_label,
         'predicted_class': predicted_class,
         'probabilities': probabilities,
-
     })
 
 
