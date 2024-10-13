@@ -3,10 +3,12 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 os.environ["FLASK_ENV"] = "development"
 
 app = Flask(__name__)
+CORS(app)
 
 load_dotenv()
 
@@ -17,10 +19,10 @@ tokenizer = AutoTokenizer.from_pretrained(model_name, token=HUGGINGFACE_TOKEN)
 model = AutoModelForSequenceClassification.from_pretrained(model_name, token=HUGGINGFACE_TOKEN)
 
 class_mapping = {
-    0: "Academic grievance",
-    1: "Behaviour grievance",
-    2: "Facility grievance",
-    3: "Finance grievance",
+    0: "Academic",
+    1: "Behaviour",
+    2: "Facility",
+    3: "Finance",
     4: "Other"
 }
 
