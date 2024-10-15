@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, BertTokenizer, BertModel
 import torch
 import os
 from dotenv import load_dotenv
@@ -17,6 +17,10 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 model_name = "yx921/complaint_categorize_model"
 tokenizer = AutoTokenizer.from_pretrained(model_name, token=HUGGINGFACE_TOKEN)
 model = AutoModelForSequenceClassification.from_pretrained(model_name, token=HUGGINGFACE_TOKEN)
+
+# bert_case_uncased = "bert-base-uncased"
+# bert_tokenizer = BertTokenizer.from_pretrained(bert_case_uncased)
+# bert_model = BertModel.from_pretrained(bert_case_uncased)
 
 class_mapping = {
     0: "Academic",
@@ -50,6 +54,14 @@ def categorize_grievance(grievance_text):
     predicted_label = class_mapping.get(predicted_class, "Unknown Category")
     return predicted_label, probs.tolist(), predicted_class
 
+
+# def get_embedding(text):
+#     inputs = tokenizer(text, return_tensors='pt', padding=True, truncation=True)
+#     with torch.no_grad():
+#         outputs = model(**inputs)
+#     return outputs.last_hidden_state.mean(dim=1)
+
+
 @app.route('/categorize', methods=['POST'])
 def categorize():
     data = request.json
@@ -66,6 +78,20 @@ def categorize():
         'probabilities': probabilities,
     })
 
+
+# @app.route('/similiar', methods=['POST'])
+# def similiarSearch():
+    data = request.json
+    if 'grievance' not in data:
+        return jsonify({'error': 'No complaint text provided'}), 400
+    
+    grievance_text = data['grievance']
+    grievance_embedding = get_embedding(grievance_text)
+    
+    return jsonify({
+        'grievance': grievance_text,
+        'embedding': grievance_embedding.tolist()
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
