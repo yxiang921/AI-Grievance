@@ -62,6 +62,12 @@ def categorize_grievance(grievance_text):
 #     return outputs.last_hidden_state.mean(dim=1)
 
 
+@app.route('/')
+def index():
+    print("Hello, World!")
+    return "Hello, World!"
+
+
 @app.route('/categorize', methods=['POST'])
 def categorize():
     data = request.json
