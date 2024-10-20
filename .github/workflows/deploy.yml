@@ -1,0 +1,46 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+    - name: Build the Docker image
+      run: |
+        IMAGE_NAME=yx921/grievance-ai
+        IMAGE_TAG=v${{ github.run.number }}  # 使用运行次数作为标签
+        docker build . -t $IMAGE_NAME:$IMAGE_TAG
+
+    - name: Push the Docker image
+      run: |
+        IMAGE_NAME=yx921/grievance-ai
+        IMAGE_TAG=v${{ github.run.number }}
+        docker push $IMAGE_NAME:$IMAGE_TAG
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: grievance-ai
+        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+        image: yx921/grievance-ai:v${{ github.run.number }}
